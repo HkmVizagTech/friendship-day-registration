@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import Sunset from './sunset';
@@ -11,6 +11,7 @@ const blank = { name: '', phone: '', age: '', occupation: '', company: '', colle
 
 export default function Register() {
   const router = useRouter();
+  const cardRef = useRef(null);
   const [ticketType, setTicketType] = useState('single');
   const [me, setMe] = useState(blank);
   const [friend, setFriend] = useState(blank);
@@ -18,9 +19,21 @@ export default function Register() {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
+  const [barHidden, setBarHidden] = useState(false);
 
   const isDuo = ticketType === 'duo';
   const tier = TIERS[ticketType];
+
+  // The floating bar is only useful while the form is off screen.
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver((entries) => setBarHidden(entries[0].isIntersecting), {
+      rootMargin: '-90px 0px 0px 0px',
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const clearErr = (k) => setErrors((x) => (x[k] ? { ...x, [k]: '' } : x));
 
@@ -53,6 +66,10 @@ export default function Register() {
       });
       return next;
     });
+  }
+
+  function jumpToForm() {
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function pay() {
@@ -145,63 +162,53 @@ export default function Register() {
         <Sunset />
       </header>
 
-      <section className="verse">
-        <p className="sanskrit">suhṛdaṁ sarva-bhūtānām</p>
-        <p className="gloss">Krishna, the well-wishing friend of every living being.</p>
-        <span className="ref">Bhagavad-gītā 5.29</span>
-      </section>
-
-      <section className="section">
-        <p className="eyebrow">What the evening holds</p>
-        <ul className="hl">
-          {EVENT.highlights.map(([h, s]) => (
-            <li key={h}>
-              <b>{h}</b>
-              <small>{s}</small>
-            </li>
+      <section className="facts">
+        <dl className="facts-grid">
+          <div>
+            <dt>When</dt>
+            <dd>
+              {EVENT.date.split(' ')[0]} Aug
+              <small>{EVENT.weekday}</small>
+            </dd>
+          </div>
+          <div>
+            <dt>Starts</dt>
+            <dd>
+              {EVENT.time}
+              <small>Come early</small>
+            </dd>
+          </div>
+          <div>
+            <dt>Where</dt>
+            <dd>
+              {EVENT.venue.split(' ')[0]}
+              <small>{EVENT.address}</small>
+            </dd>
+          </div>
+        </dl>
+        <ul className="chips">
+          {EVENT.highlights.map(([h]) => (
+            <li key={h}>{h}</li>
           ))}
         </ul>
-
-        <dl className="when">
-          <dt>When</dt>
-          <dd>
-            {EVENT.weekday}, {EVENT.date}
-            <small>Starts {EVENT.time}</small>
-          </dd>
-          <dt>Where</dt>
-          <dd>
-            {EVENT.venue}
-            <small>{EVENT.address}</small>
-          </dd>
-        </dl>
       </section>
 
-      <section className="card">
+      <section className="card" ref={cardRef}>
         <div className="card-top" />
         <div className="card-body">
           <h2>Book your seat</h2>
-          <p className="sub">Seats are limited and the feast is counted by headcount, so please register early.</p>
+          <p className="sub">The feast is cooked to headcount, so please register before you come.</p>
 
           {notice && <p className="formerr">{notice}</p>}
 
           <div className="tiers">
-            <button
-              type="button"
-              className="tier single"
-              aria-pressed={!isDuo}
-              onClick={() => chooseTier('single')}
-            >
+            <button type="button" className="tier single" aria-pressed={!isDuo} onClick={() => chooseTier('single')}>
               <span className="who">Just me</span>
               <span className="price">₹99</span>
               <span className="note">One entry</span>
             </button>
 
-            <button
-              type="button"
-              className="tier duo"
-              aria-pressed={isDuo}
-              onClick={() => chooseTier('duo')}
-            >
+            <button type="button" className="tier duo" aria-pressed={isDuo} onClick={() => chooseTier('duo')}>
               <span className="save">Save ₹49</span>
               <span className="who">Me + a friend</span>
               <span className="price">₹149</span>
@@ -213,14 +220,7 @@ export default function Register() {
             <b>{isDuo ? 'You' : 'Your details'}</b>
             {isDuo && <span>Person 1</span>}
           </div>
-          <PersonFields
-            idPrefix="me"
-            keyPrefix=""
-            values={me}
-            errors={errors}
-            onSet={setMine}
-            onPick={pickMine}
-          />
+          <PersonFields idPrefix="me" keyPrefix="" values={me} errors={errors} onSet={setMine} onPick={pickMine} />
 
           {isDuo && (
             <div className="reveal">
@@ -228,9 +228,7 @@ export default function Register() {
                 <b>Your friend</b>
                 <span>Person 2</span>
               </div>
-              <p className="hint">
-                Both of you come in on one pass, so bring them along on the evening.
-              </p>
+              <p className="hint">Both of you come in on one pass, so bring them along on the evening.</p>
               <PersonFields
                 idPrefix="friend"
                 keyPrefix="friend."
@@ -247,10 +245,29 @@ export default function Register() {
             <span className="amt">₹{tier.amount / 100}</span>
           </button>
 
-          <p className="fineprint">
-            Secure payment by Razorpay. Your pass reaches this screen the moment payment clears.
-          </p>
+          <p className="fineprint">Secure payment by Razorpay. Your pass appears the moment payment clears.</p>
         </div>
+      </section>
+
+      <section className="verse">
+        <p className="sanskrit">suhṛdaṁ sarva-bhūtānām</p>
+        <p className="gloss">Krishna, the well-wishing friend of every living being.</p>
+        <span className="ref">Bhagavad-gītā 5.29</span>
+      </section>
+
+      <section className="section">
+        <p className="eyebrow">How the evening runs</p>
+        <ul className="hl">
+          {EVENT.highlights.map(([h, s], i) => (
+            <li key={h}>
+              <span className="n">0{i + 1}</span>
+              <span>
+                <b>{h}</b>
+                <small>{s}</small>
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <footer className="foot">
@@ -263,6 +280,16 @@ export default function Register() {
         </p>
         <p>{EVENT.org}</p>
       </footer>
+
+      <div className={`bookbar${barHidden ? ' hide' : ''}`}>
+        <span className="lead">
+          <b>₹99 · ₹149 for two</b>
+          {EVENT.weekday} {EVENT.date.split(' ')[0]} Aug, {EVENT.time}
+        </span>
+        <button type="button" onClick={jumpToForm}>
+          Book now
+        </button>
+      </div>
     </main>
   );
 }

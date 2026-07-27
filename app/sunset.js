@@ -34,10 +34,10 @@ export default function Sunset() {
     <svg className="sunset" viewBox="0 0 540 190" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
       <defs>
         <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7FB8D6" />
-          <stop offset="42%" stopColor="#F6CB7B" />
-          <stop offset="78%" stopColor="#F0894A" />
-          <stop offset="100%" stopColor="#E8551F" />
+          <stop offset="0%" stopColor="#EAF4F9" />
+          <stop offset="34%" stopColor="#F7D89A" />
+          <stop offset="72%" stopColor="#F09A52" />
+          <stop offset="100%" stopColor="#E8641F" />
         </linearGradient>
         <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0%" stopColor="#FFF0C4" stopOpacity="0.95" />

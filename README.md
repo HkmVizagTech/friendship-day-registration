@@ -65,5 +65,5 @@ number to count for the feast.
 
 ## Note on the date
 
-01 August 2026 falls on a **Saturday**; the first Sunday of August is the 2nd. The poster says
-"Sunday 01 August". Whichever is correct, fix `EVENT.weekday` and `EVENT.date` in `lib/event.js`.
+Confirmed with you: the event is on **Saturday 01 August 2026**. Earlier poster copy said
+"Sunday" — the site now says Saturday. Both live in `EVENT` in `lib/event.js`.
