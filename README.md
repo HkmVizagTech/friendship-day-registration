@@ -67,3 +67,31 @@ number to count for the feast.
 
 Confirmed with you: the event is on **Saturday 01 August 2026**. Earlier poster copy said
 "Sunday" — the site now says Saturday. Both live in `EVENT` in `lib/event.js`.
+
+## Admin dashboard
+
+`/admin` — password protected, one shared password for the team.
+
+| Key | Notes |
+| --- | --- |
+| `ADMIN_PASSWORD` | Required. The desk password. |
+| `ADMIN_SESSION_SECRET` | Optional, recommended. Long random string. Falls back to `ADMIN_PASSWORD`. |
+
+Session is a signed httpOnly cookie, 12 hour expiry. Login is timing-safe and locks an IP out
+for 10 minutes after 8 wrong attempts.
+
+**Dashboard** (`/admin`)
+- Headcount for the feast, paid bookings, amount collected, arrivals, started-but-unpaid, failed
+- Breakdown by ticket type, studying vs working, top colleges, registrations per day
+- Search across name, mobile, college, company, ticket code and Razorpay payment ID
+- Filter by status, ticket type, occupation, arrived or not; 25 per page
+- **Export CSV** respects whatever filters are on screen
+
+**Gate** (`/admin/gate`)
+- Type the code from the guest's screen, press enter
+- Big green "Let 2 in" with both names, or amber if that pass already came through
+- Undo, in case of a mis-scan
+- Running list of who just walked in
+
+The CSV is **one row per attendee**, not per booking — so the line count is the headcount to
+cook for. Duo passes produce two rows sharing one ticket code.
