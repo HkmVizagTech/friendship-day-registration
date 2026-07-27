@@ -1,29 +1,31 @@
 import { NextResponse } from 'next/server';
 import { connectDB, Registration } from '@/lib/db';
-import { razorpay, validate, FEE_PAISE } from '@/lib/util';
+import { razorpay, validate } from '@/lib/util';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { ok, errors, data } = validate(body);
+    const { ok, errors, tier, data } = validate(body);
     if (!ok) return NextResponse.json({ errors }, { status: 400 });
 
     await connectDB();
 
-    const reg = await Registration.create({ ...data, amount: FEE_PAISE, status: 'created' });
+    // Amount always comes from the server-side tier table, never from the client.
+    const reg = await Registration.create({ ...data, amount: tier.amount, status: 'created' });
 
     const order = await razorpay().orders.create({
-      amount: FEE_PAISE,
+      amount: tier.amount,
       currency: 'INR',
       receipt: String(reg._id),
       notes: {
         registrationId: String(reg._id),
         name: data.name,
         phone: data.phone,
-        occupation: data.occupation,
-        event: 'Friendship Day',
+        ticketType: data.ticketType,
+        heads: String(data.heads),
+        event: 'Friendship Unlimited 2026',
       },
     });
 

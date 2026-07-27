@@ -3,35 +3,57 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
-import Braid from './braid';
+import Sunset from './sunset';
+import PersonFields from './fields';
+import { EVENT, TIERS } from '@/lib/event';
 
-const YEARS = ['1st year', '2nd year', '3rd year', '4th year', '5th year', 'Postgraduate'];
+const blank = { name: '', phone: '', age: '', occupation: '', company: '', college: '', year: '' };
 
 export default function Register() {
   const router = useRouter();
-  const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    age: '',
-    occupation: '',
-    company: '',
-    college: '',
-    year: '',
-  });
+  const [ticketType, setTicketType] = useState('single');
+  const [me, setMe] = useState(blank);
+  const [friend, setFriend] = useState(blank);
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [sdkReady, setSdkReady] = useState(false);
 
-  const set = (k) => (e) => {
-    setForm((f) => ({ ...f, [k]: e.target.value }));
-    setErrors((x) => ({ ...x, [k]: '' }));
+  const isDuo = ticketType === 'duo';
+  const tier = TIERS[ticketType];
+
+  const clearErr = (k) => setErrors((x) => (x[k] ? { ...x, [k]: '' } : x));
+
+  const setMine = (k) => (ev) => {
+    const v = ev.target.value;
+    setMe((f) => ({ ...f, [k]: v }));
+    clearErr(k);
+  };
+  const pickMine = (v) => () => {
+    setMe((f) => ({ ...f, occupation: v, company: '', college: '', year: '' }));
+    clearErr('occupation');
+  };
+  const setTheirs = (k) => (ev) => {
+    const v = ev.target.value;
+    setFriend((f) => ({ ...f, [k]: v }));
+    clearErr(`friend.${k}`);
+  };
+  const pickTheirs = (v) => () => {
+    setFriend((f) => ({ ...f, occupation: v, company: '', college: '', year: '' }));
+    clearErr('friend.occupation');
   };
 
-  const pick = (v) => () => {
-    setForm((f) => ({ ...f, occupation: v, company: '', college: '', year: '' }));
-    setErrors((x) => ({ ...x, occupation: '' }));
-  };
+  function chooseTier(t) {
+    setTicketType(t);
+    setNotice('');
+    setErrors((x) => {
+      const next = {};
+      Object.keys(x).forEach((k) => {
+        if (!k.startsWith('friend.')) next[k] = x[k];
+      });
+      return next;
+    });
+  }
 
   async function pay() {
     setNotice('');
@@ -40,14 +62,14 @@ export default function Register() {
       const res = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...me, ticketType, friend: isDuo ? friend : undefined }),
       });
       const data = await res.json();
 
       if (!res.ok) {
         if (data.errors) {
           setErrors(data.errors);
-          setNotice('Check the highlighted fields.');
+          setNotice('A few things need fixing below.');
         } else {
           setNotice(data.message || 'Could not start the payment. Try again.');
         }
@@ -56,7 +78,7 @@ export default function Register() {
       }
 
       if (!window.Razorpay) {
-        setNotice('Payment window did not load. Refresh and try again.');
+        setNotice('Payment window did not load. Refresh the page and try again.');
         setBusy(false);
         return;
       }
@@ -66,14 +88,14 @@ export default function Register() {
         order_id: data.orderId,
         amount: data.amount,
         currency: data.currency,
-        name: 'Friendship Day 2026',
-        description: 'Registration for one',
+        name: 'Friendship Unlimited 2026',
+        description: isDuo ? 'Entry for two' : 'Entry for one',
         prefill: { name: data.name, contact: data.phone },
-        theme: { color: '#FF3D7F' },
+        theme: { color: '#E8551F' },
         modal: {
           ondismiss: () => {
             setBusy(false);
-            setNotice('Payment cancelled. Your spot is not booked yet.');
+            setNotice('Payment cancelled. Your seat is not booked yet.');
           },
         },
         handler: async (r) => {
@@ -84,7 +106,7 @@ export default function Register() {
               body: JSON.stringify(r),
             });
           } catch {
-            // Webhook will still confirm it; the thank-you page polls.
+            // The webhook still confirms it; the next page polls until it does.
           }
           router.push(`/thank-you?rid=${data.registrationId}`);
         },
@@ -102,9 +124,6 @@ export default function Register() {
     }
   }
 
-  const isStudent = form.occupation === 'student';
-  const isWorking = form.occupation === 'working';
-
   return (
     <main className="shell">
       <Script
@@ -113,138 +132,137 @@ export default function Register() {
         onLoad={() => setSdkReady(true)}
       />
 
-      <p className="eyebrow">Sunday · 2 August 2026</p>
-      <h1>
-        Friendship
-        <span className="knot">Day</span>
-      </h1>
-      <p className="standfirst">
-        One afternoon, one band on your wrist, and the people you would call at 2am. Bring them along.
-      </p>
-      <ul className="facts">
-        <li>HKM Vizag, Gambheeram</li>
-        <li>4:00 PM onwards</li>
-        <li>Rs 99 per person</li>
-      </ul>
+      <header className="hero">
+        <p className="lockup">
+          {EVENT.host} invites you
+          <span>{EVENT.org}</span>
+        </p>
+        <h1 className="title">
+          {EVENT.title}
+          <span className="script">{EVENT.titleScript}</span>
+        </h1>
+        <p className="ribbon">{EVENT.kicker}</p>
+        <Sunset />
+      </header>
+
+      <section className="verse">
+        <p className="sanskrit">suhṛdaṁ sarva-bhūtānām</p>
+        <p className="gloss">Krishna, the well-wishing friend of every living being.</p>
+        <span className="ref">Bhagavad-gītā 5.29</span>
+      </section>
+
+      <section className="section">
+        <p className="eyebrow">What the evening holds</p>
+        <ul className="hl">
+          {EVENT.highlights.map(([h, s]) => (
+            <li key={h}>
+              <b>{h}</b>
+              <small>{s}</small>
+            </li>
+          ))}
+        </ul>
+
+        <dl className="when">
+          <dt>When</dt>
+          <dd>
+            {EVENT.weekday}, {EVENT.date}
+            <small>Starts {EVENT.time}</small>
+          </dd>
+          <dt>Where</dt>
+          <dd>
+            {EVENT.venue}
+            <small>{EVENT.address}</small>
+          </dd>
+        </dl>
+      </section>
 
       <section className="card">
-        <Braid />
+        <div className="card-top" />
         <div className="card-body">
-          <h2>Book your spot</h2>
+          <h2>Book your seat</h2>
+          <p className="sub">Seats are limited and the feast is counted by headcount, so please register early.</p>
 
           {notice && <p className="formerr">{notice}</p>}
 
-          <div className="field">
-            <label htmlFor="name">Full name</label>
-            <input
-              id="name"
-              value={form.name}
-              onChange={set('name')}
-              className={errors.name ? 'bad' : ''}
-              autoComplete="name"
-              placeholder="As you would like it on your band"
-            />
-            {errors.name && <p className="err">{errors.name}</p>}
+          <div className="tiers">
+            <button
+              type="button"
+              className="tier single"
+              aria-pressed={!isDuo}
+              onClick={() => chooseTier('single')}
+            >
+              <span className="who">Just me</span>
+              <span className="price">₹99</span>
+              <span className="note">One entry</span>
+            </button>
+
+            <button
+              type="button"
+              className="tier duo"
+              aria-pressed={isDuo}
+              onClick={() => chooseTier('duo')}
+            >
+              <span className="save">Save ₹49</span>
+              <span className="who">Me + a friend</span>
+              <span className="price">₹149</span>
+              <span className="note">Two entries</span>
+            </button>
           </div>
 
-          <div className="field">
-            <label htmlFor="phone">Mobile number</label>
-            <input
-              id="phone"
-              value={form.phone}
-              onChange={set('phone')}
-              className={errors.phone ? 'bad' : ''}
-              inputMode="numeric"
-              maxLength={10}
-              autoComplete="tel"
-              placeholder="10 digits"
-            />
-            {errors.phone && <p className="err">{errors.phone}</p>}
+          <div className="who-head">
+            <b>{isDuo ? 'You' : 'Your details'}</b>
+            {isDuo && <span>Person 1</span>}
           </div>
+          <PersonFields
+            idPrefix="me"
+            keyPrefix=""
+            values={me}
+            errors={errors}
+            onSet={setMine}
+            onPick={pickMine}
+          />
 
-          <div className="field">
-            <label htmlFor="age">Age</label>
-            <input
-              id="age"
-              value={form.age}
-              onChange={set('age')}
-              className={errors.age ? 'bad' : ''}
-              inputMode="numeric"
-              maxLength={3}
-              placeholder="Years"
-            />
-            {errors.age && <p className="err">{errors.age}</p>}
-          </div>
-
-          <div className="field">
-            <label>I am currently</label>
-            <div className="seg">
-              <button type="button" aria-pressed={isStudent} onClick={pick('student')}>
-                Studying
-              </button>
-              <button type="button" aria-pressed={isWorking} onClick={pick('working')}>
-                Working
-              </button>
-            </div>
-            {errors.occupation && <p className="err">{errors.occupation}</p>}
-          </div>
-
-          {isWorking && (
-            <div className="field reveal">
-              <label htmlFor="company">Company</label>
-              <input
-                id="company"
-                value={form.company}
-                onChange={set('company')}
-                className={errors.company ? 'bad' : ''}
-                autoComplete="organization"
-                placeholder="Where you work"
+          {isDuo && (
+            <div className="reveal">
+              <div className="who-head">
+                <b>Your friend</b>
+                <span>Person 2</span>
+              </div>
+              <p className="hint">
+                Both of you come in on one pass, so bring them along on the evening.
+              </p>
+              <PersonFields
+                idPrefix="friend"
+                keyPrefix="friend."
+                values={friend}
+                errors={errors}
+                onSet={setTheirs}
+                onPick={pickTheirs}
               />
-              {errors.company && <p className="err">{errors.company}</p>}
             </div>
-          )}
-
-          {isStudent && (
-            <>
-              <div className="field reveal">
-                <label htmlFor="college">College</label>
-                <input
-                  id="college"
-                  value={form.college}
-                  onChange={set('college')}
-                  className={errors.college ? 'bad' : ''}
-                  placeholder="Where you study"
-                />
-                {errors.college && <p className="err">{errors.college}</p>}
-              </div>
-              <div className="field reveal">
-                <label htmlFor="year">Year of study</label>
-                <select
-                  id="year"
-                  value={form.year}
-                  onChange={set('year')}
-                  className={errors.year ? 'bad' : ''}
-                >
-                  <option value="">Choose a year</option>
-                  {YEARS.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-                {errors.year && <p className="err">{errors.year}</p>}
-              </div>
-            </>
           )}
 
           <button className="pay" onClick={pay} disabled={busy || !sdkReady}>
-            <span>{busy ? 'Opening payment…' : 'Pay and register'}</span>
-            <span className="amt">Rs 99</span>
+            <span>{busy ? 'Opening payment…' : isDuo ? 'Pay for two' : 'Pay and register'}</span>
+            <span className="amt">₹{tier.amount / 100}</span>
           </button>
 
-          <p className="fineprint">Secure payment by Razorpay. Registration fee is non-refundable.</p>
+          <p className="fineprint">
+            Secure payment by Razorpay. Your pass reaches this screen the moment payment clears.
+          </p>
         </div>
       </section>
+
+      <footer className="foot">
+        <p className="om">Hare Krishna</p>
+        <p>
+          Questions? Call <a href={`tel:${EVENT.phone}`}>{EVENT.phone}</a>
+        </p>
+        <p>
+          {EVENT.venue}, {EVENT.address}
+        </p>
+        <p>{EVENT.org}</p>
+      </footer>
     </main>
   );
 }

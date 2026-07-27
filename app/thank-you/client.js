@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Braid from '../braid';
+import Sunset from '../sunset';
+import { EVENT } from '@/lib/event';
 
 export default function ThankYouClient() {
   const rid = useSearchParams().get('rid');
   const [reg, setReg] = useState(null);
-  const [state, setState] = useState('loading'); // loading | ok | pending | missing
+  const [state, setState] = useState('loading');
 
   useEffect(() => {
     if (!rid) {
@@ -33,7 +34,6 @@ export default function ThankYouClient() {
           return;
         }
         setState('pending');
-        // Webhooks can lag a few seconds. Keep checking for ~30s.
         if (tries++ < 10) setTimeout(poll, 3000);
       } catch {
         if (!stop) setState('pending');
@@ -49,7 +49,10 @@ export default function ThankYouClient() {
   if (state === 'loading') {
     return (
       <main className="shell">
-        <p className="standfirst">Checking your payment…</p>
+        <section className="section">
+          <p className="eyebrow">One moment</p>
+          <p>Checking your payment…</p>
+        </section>
       </main>
     );
   }
@@ -57,53 +60,69 @@ export default function ThankYouClient() {
   if (state === 'missing') {
     return (
       <main className="shell">
-        <h1>
-          Nothing to
-          <span className="knot">show</span>
-        </h1>
-        <p className="standfirst">
-          We could not find this registration. If money left your account, send us the payment ID and we
-          will sort it out.
-        </p>
-        <Link className="back" href="/">
-          ← Back to the form
-        </Link>
+        <header className="hero">
+          <h1 className="title">
+            Nothing
+            <span className="script">here yet</span>
+          </h1>
+        </header>
+        <section className="section">
+          <p>
+            We could not find this registration. If money has left your account, call{' '}
+            <a href={`tel:${EVENT.phone}`} style={{ color: '#FFDE95' }}>
+              {EVENT.phone}
+            </a>{' '}
+            with your payment ID and we will sort it out the same day.
+          </p>
+          <Link className="back" href="/">
+            ← Back to the form
+          </Link>
+        </section>
       </main>
     );
   }
 
   const paid = state === 'ok';
+  const duo = reg?.heads === 2;
 
   return (
     <main className="shell">
-      <p className="eyebrow">{paid ? 'You are in' : 'Almost there'}</p>
-      <h1>
-        See you on
-        <span className="knot">Sunday</span>
-      </h1>
-      <p className="standfirst">
-        {paid
-          ? 'Your spot is booked. Show this screen at the gate to collect your band.'
-          : 'Your payment is going through. This page updates on its own.'}
-      </p>
+      <header className="hero">
+        <p className="lockup">
+          {paid ? 'Your seat is booked' : 'Almost there'}
+          <span>{EVENT.org}</span>
+        </p>
+        <h1 className="title">
+          See you
+          <span className="script">on {EVENT.weekday}</span>
+        </h1>
+        <p className="ribbon">
+          {EVENT.venue} · {EVENT.time}
+        </p>
+        <Sunset />
+      </header>
 
-      <section className="card" style={{ marginTop: 22 }}>
-        <Braid />
+      <section className="card" style={{ marginTop: 24 }}>
+        <div className="card-top" />
         <div className="card-body">
           {!paid && (
             <p className="pending">
-              Confirming with the bank. Do not pay again — keep this page open for a few seconds.
+              Confirming with the bank. Please do not pay again — this page updates on its own.
             </p>
           )}
 
           {paid && reg?.ticketCode && (
             <>
-              <label>Your entry code</label>
+              <label>Show this at the gate</label>
               <p className="tick">{reg.ticketCode}</p>
+              <span className="admits">Admits {reg.heads}</span>
             </>
           )}
 
           <ul className="rows">
+            <li className="head">
+              <span className="k">{duo ? 'Person 1' : 'Attendee'}</span>
+            </li>
             <li>
               <span className="k">Name</span>
               <span className="v">{reg?.name}</span>
@@ -130,21 +149,71 @@ export default function ThankYouClient() {
                 </li>
               </>
             )}
+
+            {duo && reg?.friend && (
+              <>
+                <li className="head">
+                  <span className="k">Person 2</span>
+                </li>
+                <li>
+                  <span className="k">Name</span>
+                  <span className="v">{reg.friend.name}</span>
+                </li>
+                <li>
+                  <span className="k">Mobile</span>
+                  <span className="v">{reg.friend.phone}</span>
+                </li>
+                {reg.friend.occupation === 'working' && (
+                  <li>
+                    <span className="k">Company</span>
+                    <span className="v">{reg.friend.company}</span>
+                  </li>
+                )}
+                {reg.friend.occupation === 'student' && (
+                  <>
+                    <li>
+                      <span className="k">College</span>
+                      <span className="v">{reg.friend.college}</span>
+                    </li>
+                    <li>
+                      <span className="k">Year</span>
+                      <span className="v">{reg.friend.year}</span>
+                    </li>
+                  </>
+                )}
+              </>
+            )}
+
+            <li className="head">
+              <span className="k">Payment</span>
+            </li>
             <li>
               <span className="k">Amount</span>
-              <span className="v">Rs {((reg?.amount || 0) / 100).toFixed(0)}</span>
+              <span className="v">₹{((reg?.amount || 0) / 100).toFixed(0)}</span>
             </li>
             <li>
               <span className="k">Status</span>
               <span className="v">{paid ? 'Paid' : 'Processing'}</span>
             </li>
           </ul>
+
+          {paid && (
+            <p className="fineprint">
+              Take a screenshot. Reach a little before {EVENT.time} so you do not miss the kirtan.
+            </p>
+          )}
         </div>
       </section>
 
-      <Link className="back" href="/">
-        ← Register someone else
-      </Link>
+      <footer className="foot">
+        <p className="om">Hare Krishna</p>
+        <p>
+          Questions? Call <a href={`tel:${EVENT.phone}`}>{EVENT.phone}</a>
+        </p>
+        <Link className="back" href="/">
+          ← Register someone else
+        </Link>
+      </footer>
     </main>
   );
 }

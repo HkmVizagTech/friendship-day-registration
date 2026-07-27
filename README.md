@@ -1,54 +1,69 @@
-# Friendship Day 2026 — Registration
+# Friendship Unlimited 2026 — Registration
 
-Next.js 14 (App Router) · MongoDB · Razorpay. Fee: ₹99 per person.
+Friends of Lord Krishna · Hare Krishna Movement, Visakhapatnam
+Chaitanya Bhavan, IIM Road, Gambhiram · 01 August 2026 · 5:30 PM
+
+Next.js 14 (App Router) · MongoDB · Razorpay · deployed on Netlify.
+
+## Tickets
+
+| Tier | Price | Heads |
+| --- | --- | --- |
+| `single` | ₹99 | 1 |
+| `duo` | ₹149 | 2 |
+
+Prices live in `lib/event.js` (`TIERS`) and are applied **server-side only** — the browser
+never sends an amount. Change them in that one file.
+
+All poster copy (date, venue, time, phone, highlights) is also in `lib/event.js`.
 
 ## Environment variables
 
-Set these in Vercel → Project → Settings → Environment Variables (Production + Preview):
+Netlify → Site configuration → Environment variables:
 
 | Key | Notes |
 | --- | --- |
-| `MONGODB_URI` | Atlas connection string. Allow `0.0.0.0/0` in Network Access, or Vercel's egress IPs. |
+| `MONGODB_URI` | Atlas connection string. Allow access from anywhere in Network Access. |
 | `RAZORPAY_KEY_ID` | Live or test key id. |
-| `RAZORPAY_KEY_SECRET` | Never exposed to the browser. |
-| `RAZORPAY_WEBHOOK_SECRET` | Whatever you type into the Razorpay webhook form. |
+| `RAZORPAY_KEY_SECRET` | Server only, never sent to the browser. |
+| `RAZORPAY_WEBHOOK_SECRET` | Same string you type into the Razorpay webhook form. |
 
-Redeploy after adding them — Next.js bakes env vars at build time for the client bundle.
+Redeploy after adding or changing them.
 
 ## Razorpay webhook
 
 Dashboard → Settings → Webhooks → Add New Webhook.
 
-- URL: `https://<your-domain>/api/webhook`
-- Secret: same string as `RAZORPAY_WEBHOOK_SECRET`
-- Active events: `payment.captured`, `payment.failed`, `order.paid`
+- URL: `https://<your-netlify-domain>/api/webhook`
+- Secret: same as `RAZORPAY_WEBHOOK_SECRET`
+- Events: `payment.captured`, `payment.failed`, `order.paid`
 
-The handler verifies the HMAC against the **raw** request body before parsing, matches strictly on
-`razorpay_order_id` (falling back to `notes.registrationId`), and never runs a loose query — a null
-order id cannot match another registrant's document. Updates are idempotent, so retries are safe.
+The handler verifies the HMAC against the raw body before parsing, matches strictly on
+`razorpayOrderId` with a `notes.registrationId` fallback, and never runs a loose query — a null
+order id cannot attach to another registrant. Updates are idempotent, so retries are safe.
 
-## Payment confirmation
+## Confirmation, two ways
 
-Two paths, deliberately:
+1. `/api/verify` — signature check straight from the checkout handler, instant.
+2. `/api/webhook` — source of truth. Covers closed tabs, dropped connections, slow UPI captures.
 
-1. `/api/verify` — checkout handler signature check, gives instant confirmation on the thank-you page.
-2. `/api/webhook` — source of truth. Catches closed tabs, dropped connections and delayed UPI captures.
-
-The thank-you page polls `/api/registration/[id]` every 3s for ~30s while status is `created`.
+`/thank-you` polls `/api/registration/[id]` every 3s for ~30s while status is `created`.
 
 ## Data
 
 Collection: `registrations`
 
 ```
-name, phone, age, occupation ('student' | 'working'),
-company            // working only
-college, year      // student only
+name, phone, age, occupation ('student' | 'working'), company | college + year,
+ticketType ('single' | 'duo'), heads, friend { same shape },
 amount (paise), status ('created' | 'paid' | 'failed'),
-razorpayOrderId, razorpayPaymentId, paymentMethod, paidAt, ticketCode
+razorpayOrderId, razorpayPaymentId, paymentMethod, paidAt, ticketCode, checkedInAt
 ```
 
-## Editing event details
+One `ticketCode` per registration, prefixed `FU-`. A duo pass admits 2 — `heads` is the
+number to count for the feast.
 
-Date, venue and time are plain text in `app/page.js` (the `.eyebrow` and `.facts` blocks) and in
-`app/thank-you/client.js`.
+## Note on the date
+
+01 August 2026 falls on a **Saturday**; the first Sunday of August is the 2nd. The poster says
+"Sunday 01 August". Whichever is correct, fix `EVENT.weekday` and `EVENT.date` in `lib/event.js`.

@@ -3,6 +3,8 @@ import { connectDB, Registration } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+const mask = (p = '') => p.replace(/^(\d{2})\d{4}(\d{4})$/, '$1XXXX$2');
+
 export async function GET(_req, { params }) {
   try {
     await connectDB();
@@ -11,11 +13,23 @@ export async function GET(_req, { params }) {
 
     return NextResponse.json({
       name: reg.name,
-      phone: reg.phone.replace(/^(\d{2})\d{4}(\d{4})$/, '$1••••$2'),
+      phone: mask(reg.phone),
       occupation: reg.occupation,
       company: reg.company,
       college: reg.college,
       year: reg.year,
+      ticketType: reg.ticketType,
+      heads: reg.heads,
+      friend: reg.friend
+        ? {
+            name: reg.friend.name,
+            phone: mask(reg.friend.phone),
+            occupation: reg.friend.occupation,
+            company: reg.friend.company,
+            college: reg.friend.college,
+            year: reg.friend.year,
+          }
+        : null,
       amount: reg.amount,
       status: reg.status,
       ticketCode: reg.ticketCode || '',
