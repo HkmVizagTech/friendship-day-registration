@@ -5,7 +5,7 @@ import { isAuthed } from '@/lib/auth';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
-  if (!isAuthed()) return NextResponse.json({ message: 'Not signed in' }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ message: 'Not signed in' }, { status: 401 });
 
   try {
     const { code, undo } = await req.json().catch(() => ({}));

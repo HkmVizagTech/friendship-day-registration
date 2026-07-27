@@ -12,6 +12,6 @@ export async function POST(req) {
   const ok = checkPassword(password);
   noteAttempt(ip, ok);
   if (!ok) return NextResponse.json({ message: 'Wrong password' }, { status: 401 });
-  issueSession();
+  await issueSession();
   return NextResponse.json({ ok: true });
 }

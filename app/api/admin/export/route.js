@@ -13,7 +13,7 @@ const ist = (d) =>
   d ? new Date(d).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false }) : '';
 
 export async function GET(req) {
-  if (!isAuthed()) return new Response('Not signed in', { status: 401 });
+  if (!(await isAuthed())) return new Response('Not signed in', { status: 401 });
 
   try {
     await connectDB();

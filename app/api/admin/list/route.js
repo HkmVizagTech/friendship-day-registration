@@ -37,7 +37,7 @@ export function buildQuery(sp) {
 }
 
 export async function GET(req) {
-  if (!isAuthed()) return NextResponse.json({ message: 'Not signed in' }, { status: 401 });
+  if (!(await isAuthed())) return NextResponse.json({ message: 'Not signed in' }, { status: 401 });
 
   try {
     const sp = req.nextUrl.searchParams;

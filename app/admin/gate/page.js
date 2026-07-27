@@ -5,7 +5,7 @@ import Gate from './gate';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Gate — Friendship Unlimited' };
 
-export default function GatePage() {
-  if (!isAuthed()) redirect('/admin/login');
+export default async function GatePage() {
+  if (!(await isAuthed())) redirect('/admin/login');
   return <Gate />;
 }

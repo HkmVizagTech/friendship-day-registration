@@ -95,3 +95,22 @@ for 10 minutes after 8 wrong attempts.
 
 The CSV is **one row per attendee**, not per booking — so the line count is the headcount to
 cook for. Duo passes produce two rows sharing one ticket code.
+
+## Security note (July 2026)
+
+Next.js published nine CVEs on 21 Jul 2026 (SSRF via rewrites, Server Action DoS, cache
+confusion, and others). The 14.x line was never patched — fixes only landed in `15.5.21`
+and `16.2.11`. This project moved to Next 15.5.x. Server Actions, rewrites and custom
+middleware are not used here, so most of those CVEs did not apply to this app's actual
+behaviour, but Railway (and any dependency scanner) checks the version number, not usage,
+so the upgrade was required regardless.
+
+**What the Next 15 upgrade changed in code:** `cookies()` is now async. `lib/auth.js` and
+every route/page that calls `isAuthed()`, `issueSession()`, or `clearSession()` now awaits
+it. The dynamic route `app/api/registration/[id]/route.js` now awaits `params` before
+reading `params.id`. Both were re-tested end to end (login, session check, logout,
+registration lookup) against a real MongoDB instance after the change, not just built.
+
+`postcss` and `sharp` (bundled inside Next's own tooling, not used by this app's code)
+were pinned to patched versions via `overrides` in `package.json` to clear the remaining
+audit warnings.
