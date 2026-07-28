@@ -92,8 +92,9 @@ body {
 }
 
 .restriction {
-  display: inline-block;
-  margin-top: 9px;
+  display: block;
+  width: fit-content;
+  margin: 10px auto 0;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.03em;
