@@ -88,9 +88,14 @@ for 10 minutes after 8 wrong attempts.
 - **Export CSV** respects whatever filters are on screen
 
 **Gate** (`/admin/gate`)
-- Type the code from the guest's screen, press enter
+- Type either the ticket code OR the guest's 10-digit mobile number, press enter
+- A phone number matches against both the primary attendee's number and the friend's
+  number on duo passes, so either person in a pair can be checked in with either phone
+- If a phone number happens to match more than one *paid* booking (e.g. it appears as
+  primary on one booking and as someone's friend on another), the gate shows both
+  bookings side by side so the volunteer picks the right one — nothing is guessed
 - Big green "Let 2 in" with both names, or amber if that pass already came through
-- Undo, in case of a mis-scan
+- Undo, in case of a mis-check-in
 - Running list of who just walked in
 
 The CSV is **one row per attendee**, not per booking — so the line count is the headcount to
