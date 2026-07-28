@@ -159,6 +159,7 @@ export default function Register() {
           <span className="script">{EVENT.titleScript}</span>
         </h1>
         <p className="ribbon">{EVENT.kicker}</p>
+        <p className="restriction">{EVENT.restriction}</p>
         <Sunset />
       </header>
 
@@ -239,6 +240,8 @@ export default function Register() {
               />
             </div>
           )}
+
+          <p className="restriction-note">{EVENT.restriction} — please confirm before paying.</p>
 
           <button className="pay" onClick={pay} disabled={busy || !sdkReady}>
             <span>{busy ? 'Opening payment…' : isDuo ? 'Pay for two' : 'Pay and register'}</span>

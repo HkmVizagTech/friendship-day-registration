@@ -46,8 +46,8 @@ export default function PersonFields({ idPrefix, keyPrefix, values, errors, onSe
             onChange={onSet('age')}
             className={e('age') ? 'bad' : ''}
             inputMode="numeric"
-            maxLength={3}
-            placeholder="Years"
+            maxLength={2}
+            placeholder="Up to 30"
           />
           {e('age') && <p className="err">{e('age')}</p>}
         </div>

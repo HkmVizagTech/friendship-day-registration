@@ -91,6 +91,27 @@ body {
   color: #FFF3DE;
 }
 
+.restriction {
+  display: inline-block;
+  margin-top: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ember-ink);
+  background: #FFF0E5;
+  border: 1px solid #F5D2B8;
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.restriction-note {
+  margin: 4px 0 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ember-ink);
+  text-align: center;
+}
+
 .sunset { display: block; width: 100%; height: auto; margin-top: 18px; }
 
 /* ---------- fast facts ---------- */
