@@ -182,7 +182,7 @@ export default function Register() {
           <div>
             <dt>Where</dt>
             <dd>
-              {EVENT.venue.split(' ')[0]}
+              {EVENT.venue}
               <small>{EVENT.address}</small>
             </dd>
           </div>
