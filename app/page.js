@@ -153,18 +153,16 @@ export default function Register() {
 
           {notice && <p className="formerr">{notice}</p>}
 
-          <div className="tiers">
-            <button type="button" className="tier single" aria-pressed={!isDuo} onClick={() => chooseTier('single')}>
-              <span className="who">Just me</span>
-              <span className="price">Free</span>
-              <span className="note">One entry</span>
-            </button>
-
-            <button type="button" className="tier duo" aria-pressed={isDuo} onClick={() => chooseTier('duo')}>
-              <span className="who">Me + a friend</span>
-              <span className="price">Free</span>
-              <span className="note">Two entries, one form</span>
-            </button>
+          <div className="field">
+            <label>Who&rsquo;s coming</label>
+            <div className="seg">
+              <button type="button" aria-pressed={!isDuo} onClick={() => chooseTier('single')}>
+                Just me
+              </button>
+              <button type="button" aria-pressed={isDuo} onClick={() => chooseTier('duo')}>
+                Me + a friend
+              </button>
+            </div>
           </div>
 
           <div className="who-head">
