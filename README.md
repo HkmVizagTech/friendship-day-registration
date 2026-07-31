@@ -160,3 +160,15 @@ who used to come in on someone else's duo pass — fills in their own form.
 - Re-tested end to end against a real MongoDB after the change: registration,
   validation, thank-you fetch, admin stats/list/export, and gate check-in by
   both code and phone.
+
+## Removing old test data
+
+`/admin` → **Remove old test data** (top right, red button).
+
+It previews how many registrations were created **before today (IST)** first, requires
+typing `DELETE` to confirm, and only then deletes — registrations made today are never
+touched no matter when you run it. Safe to run more than once; it's a no-op if there's
+nothing left before today.
+
+This only ever touches whichever database `MONGODB_URI` points to in that environment
+— it does not run automatically and nobody but a signed-in admin can trigger it.

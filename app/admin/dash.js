@@ -70,6 +70,24 @@ export default function Dashboard() {
     router.replace('/admin/login');
   }
 
+  const [cleanup, setCleanup] = useState({ open: false, preview: null, confirmText: '', busy: false, done: null });
+
+  async function openCleanup() {
+    setCleanup({ open: true, preview: null, confirmText: '', busy: false, done: null });
+    const res = await fetch('/api/admin/cleanup', { cache: 'no-store' });
+    if (res.status === 401) return router.replace('/admin/login');
+    const d = await res.json();
+    setCleanup((c) => ({ ...c, preview: d }));
+  }
+
+  async function runCleanup() {
+    setCleanup((c) => ({ ...c, busy: true }));
+    const res = await fetch('/api/admin/cleanup', { method: 'DELETE' });
+    const d = await res.json();
+    setCleanup((c) => ({ ...c, busy: false, done: d }));
+    load();
+  }
+
   return (
     <div className="adm-wrap">
       <div className="adm">
@@ -89,7 +107,62 @@ export default function Dashboard() {
           <button className="btn" onClick={signOut}>
             Sign out
           </button>
+          <button className="btn" style={{ borderColor: '#CF2A5C', color: '#CF2A5C' }} onClick={openCleanup}>
+            Remove old test data
+          </button>
         </header>
+
+        {cleanup.open && (
+          <div className="panel" style={{ borderColor: '#F0BCC9', background: '#FFF7F8', marginBottom: 14 }}>
+            <h3 style={{ color: '#CF2A5C' }}>Remove old test data</h3>
+            {cleanup.done ? (
+              <>
+                <p style={{ fontSize: 14, marginBottom: 10 }}>
+                  Deleted <strong>{cleanup.done.deleted}</strong> registration
+                  {cleanup.done.deleted === 1 ? '' : 's'} from before today.
+                </p>
+                <button className="btn" onClick={() => setCleanup({ open: false, preview: null, confirmText: '', busy: false, done: null })}>
+                  Close
+                </button>
+              </>
+            ) : cleanup.preview === null ? (
+              <p style={{ fontSize: 14 }}>Checking…</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 14, marginBottom: 4 }}>
+                  This permanently deletes every registration created <strong>before today (IST)</strong> —
+                  keeping only registrations made today. This cannot be undone.
+                </p>
+                <p style={{ fontSize: 14, marginBottom: 10 }}>
+                  <strong>{cleanup.preview.wouldDelete}</strong> registration
+                  {cleanup.preview.wouldDelete === 1 ? '' : 's'} will be deleted. Registrations made today are
+                  never touched.
+                </p>
+                <label style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--navy)' }}>
+                  Type DELETE to confirm
+                </label>
+                <input
+                  value={cleanup.confirmText}
+                  onChange={(e) => setCleanup((c) => ({ ...c, confirmText: e.target.value }))}
+                  placeholder="DELETE"
+                  style={{ marginBottom: 10 }}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    className="btn ember"
+                    disabled={cleanup.confirmText !== 'DELETE' || cleanup.busy || cleanup.preview.wouldDelete === 0}
+                    onClick={runCleanup}
+                  >
+                    {cleanup.busy ? 'Deleting…' : `Delete ${cleanup.preview.wouldDelete} old record${cleanup.preview.wouldDelete === 1 ? '' : 's'}`}
+                  </button>
+                  <button className="btn" onClick={() => setCleanup({ open: false, preview: null, confirmText: '', busy: false, done: null })}>
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         <dl className="stat-grid">
           <div className="stat accent">
