@@ -55,9 +55,6 @@ export async function POST(req) {
     if (id) {
       const reg = await Registration.findById(id);
       if (!reg) return NextResponse.json({ message: 'That pass could not be found' }, { status: 404 });
-      if (reg.status !== 'paid') {
-        return NextResponse.json({ message: 'This pass is not paid. Send them to the desk.' }, { status: 409 });
-      }
       return NextResponse.json(await settle(reg, undo));
     }
 
@@ -68,9 +65,9 @@ export async function POST(req) {
     const isPhone = digits.length === 10 && /^[6-9]/.test(digits);
 
     if (isPhone) {
-      const matches = (await findByPhone(digits)).filter((r) => r.status === 'paid');
+      const matches = await findByPhone(digits);
       if (!matches.length) {
-        return NextResponse.json({ message: `No paid booking found for ${digits}` }, { status: 404 });
+        return NextResponse.json({ message: `No registration found for ${digits}` }, { status: 404 });
       }
       if (matches.length > 1) {
         return NextResponse.json({ multiple: true, choices: matches.map(summarize) });
@@ -81,9 +78,6 @@ export async function POST(req) {
     const clean = raw.toUpperCase();
     const reg = await findByCode(clean);
     if (!reg) return NextResponse.json({ message: `No pass found for ${clean}` }, { status: 404 });
-    if (reg.status !== 'paid') {
-      return NextResponse.json({ message: 'This pass is not paid. Send them to the desk.' }, { status: 409 });
-    }
     return NextResponse.json(await settle(reg, undo));
   } catch (err) {
     console.error('checkin error', err);

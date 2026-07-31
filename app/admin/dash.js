@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PREACHERS } from '@/lib/event';
 
-const rupees = (paise) => `₹${((paise || 0) / 100).toLocaleString('en-IN')}`;
 const ist = (d) =>
   d ? new Date(d).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }) : '';
 
@@ -31,18 +31,18 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [data, setData] = useState({ rows: [], total: 0, pages: 1, page: 1 });
   const [q, setQ] = useState('');
-  const [status, setStatus] = useState('paid');
   const [tier, setTier] = useState('all');
   const [occupation, setOccupation] = useState('all');
   const [arrived, setArrived] = useState('all');
+  const [preacher, setPreacher] = useState('all');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const params = useCallback(() => {
-    const p = new URLSearchParams({ status, tier, occupation, arrived, page: String(page), limit: '25' });
+    const p = new URLSearchParams({ tier, occupation, arrived, preacher, page: String(page), limit: '25' });
     if (q.trim()) p.set('q', q.trim());
     return p;
-  }, [status, tier, occupation, arrived, page, q]);
+  }, [tier, occupation, arrived, preacher, page, q]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,22 +64,19 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, [load, q]);
 
-  useEffect(() => setPage(1), [q, status, tier, occupation, arrived]);
+  useEffect(() => setPage(1), [q, tier, occupation, arrived, preacher]);
 
   async function signOut() {
     await fetch('/api/admin/logout', { method: 'POST' });
     router.replace('/admin/login');
   }
 
-  const pending = stats?.byStatus?.created || 0;
-  const failed = stats?.byStatus?.failed || 0;
-
   return (
     <div className="adm-wrap">
       <div className="adm">
         <header className="adm-bar">
           <h1>Friendship Unlimited</h1>
-          <span className="tag">Registrations</span>
+          <span className="tag">Free registrations</span>
           <span className="spacer" />
           <Link className="btn" href="/admin/gate">
             Gate check-in
@@ -104,12 +101,8 @@ export default function Dashboard() {
             </dd>
           </div>
           <div className="stat">
-            <dt>Paid bookings</dt>
+            <dt>Registrations</dt>
             <dd>{stats?.bookings ?? '—'}</dd>
-          </div>
-          <div className="stat">
-            <dt>Collected</dt>
-            <dd style={{ fontSize: 25 }}>{stats ? rupees(stats.revenue) : '—'}</dd>
           </div>
           <div className="stat">
             <dt>Arrived</dt>
@@ -118,14 +111,6 @@ export default function Dashboard() {
               <em>of {stats?.heads ?? 0}</em>
             </dd>
           </div>
-          <div className="stat">
-            <dt>Started, not paid</dt>
-            <dd>{pending}</dd>
-          </div>
-          <div className="stat">
-            <dt>Failed</dt>
-            <dd>{failed}</dd>
-          </div>
         </dl>
 
         <div className="panels">
@@ -133,8 +118,8 @@ export default function Dashboard() {
             <h3>Ticket type</h3>
             <Bars
               rows={[
-                { name: 'Single (₹99)', n: stats?.byTier?.single || 0 },
-                { name: 'Duo (₹149)', n: stats?.byTier?.duo || 0 },
+                { name: 'Single', n: stats?.byTier?.single || 0 },
+                { name: 'Duo', n: stats?.byTier?.duo || 0 },
               ]}
             />
           </div>
@@ -146,6 +131,10 @@ export default function Dashboard() {
                 { name: 'Working', n: stats?.byOccupation?.working || 0 },
               ]}
             />
+          </div>
+          <div className="panel">
+            <h3>By preacher</h3>
+            <Bars rows={(stats?.preachers || []).map((p) => ({ name: p.name, n: p.n }))} />
           </div>
           <div className="panel">
             <h3>Top colleges</h3>
@@ -162,14 +151,8 @@ export default function Dashboard() {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name, mobile, college, ticket code, payment ID"
+            placeholder="Search name, mobile, college, ticket code"
           />
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="paid">Paid</option>
-            <option value="created">Not paid</option>
-            <option value="failed">Failed</option>
-            <option value="all">All statuses</option>
-          </select>
           <select value={tier} onChange={(e) => setTier(e.target.value)}>
             <option value="all">Any ticket</option>
             <option value="single">Single</option>
@@ -184,6 +167,14 @@ export default function Dashboard() {
             <option value="all">Arrived or not</option>
             <option value="yes">Arrived</option>
             <option value="no">Not arrived</option>
+          </select>
+          <select value={preacher} onChange={(e) => setPreacher(e.target.value)}>
+            <option value="all">Any preacher</option>
+            {PREACHERS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -200,10 +191,10 @@ export default function Dashboard() {
                   <th>Mobile</th>
                   <th>Age</th>
                   <th>College / Company</th>
+                  <th>Preacher</th>
                   <th>Ticket</th>
                   <th>Code</th>
-                  <th>Paid</th>
-                  <th>Booked</th>
+                  <th>Registered</th>
                 </tr>
               </thead>
               <tbody>
@@ -233,15 +224,15 @@ export default function Dashboard() {
                       </span>
                     </td>
                     <td>
+                      {r.preacher}
+                      {r.friend?.preacher && <span className="sm">{r.friend.preacher}</span>}
+                    </td>
+                    <td>
                       <span className={`pill ${r.ticketType}`}>
                         {r.ticketType === 'duo' ? 'Duo · 2' : 'Single · 1'}
                       </span>
                     </td>
                     <td className="code">{r.ticketCode || '—'}</td>
-                    <td>
-                      <span className={`pill ${r.status}`}>{r.status}</span>
-                      <span className="sm">{rupees(r.amount)}{r.method ? ` · ${r.method}` : ''}</span>
-                    </td>
                     <td>
                       <span className="sm" style={{ marginTop: 0 }}>{ist(r.createdAt)}</span>
                     </td>
@@ -254,7 +245,7 @@ export default function Dashboard() {
 
         <div className="pager">
           <span>
-            {data.total} {data.total === 1 ? 'booking' : 'bookings'} · page {data.page} of {data.pages}
+            {data.total} {data.total === 1 ? 'registration' : 'registrations'} · page {data.page} of {data.pages}
           </span>
           <span style={{ display: 'flex', gap: 8 }}>
             <button className="btn" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>

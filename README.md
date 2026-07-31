@@ -119,3 +119,29 @@ registration lookup) against a real MongoDB instance after the change, not just 
 `postcss` and `sharp` (bundled inside Next's own tooling, not used by this app's code)
 were pinned to patched versions via `overrides` in `package.json` to clear the remaining
 audit warnings.
+
+## Free event, no payment (31 Jul 2026 change)
+
+This was rebuilt from a paid Razorpay flow into a free registration flow. Everyone
+still fills the same form and gets the same `FU-XXXXX` pass — there's just no
+payment step, no Razorpay account needed, and no webhook to configure.
+
+**What changed:**
+- `/api/order`, `/api/verify`, `/api/webhook` — removed. Replaced by a single
+  `/api/register`, which validates and saves the registration in one step.
+- Registration is complete (and the ticket code exists) the instant the form is
+  submitted — the thank-you page does one fetch, not a payment-status poll.
+- `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET` are no
+  longer needed. The `razorpay` npm package was removed.
+- Every registration now carries a **preacher** field — required, for both the
+  primary registrant and the friend on a duo pass — chosen from a fixed list in
+  `PREACHERS` (`lib/event.js`). Admin dashboard, CSV export, and gate check-in
+  all show it; `/admin` can filter by preacher.
+- Age cap lowered to 30 (was 100) as part of the same change.
+- Admin dashboard no longer shows revenue or payment status — there's nothing
+  to collect. "Registrations" replaces "Paid bookings."
+
+**Full flow re-tested against a real MongoDB before deploying:** valid single,
+age-cap rejection at 31, missing/invalid preacher rejection, duo with two
+different preachers, thank-you page fetch, admin stats/list/export, and gate
+check-in by both ticket code and a duo friend's phone number.

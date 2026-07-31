@@ -19,6 +19,7 @@ export async function GET(_req, { params }) {
       company: reg.company,
       college: reg.college,
       year: reg.year,
+      preacher: reg.preacher,
       ticketType: reg.ticketType,
       heads: reg.heads,
       friend: reg.friend
@@ -29,10 +30,9 @@ export async function GET(_req, { params }) {
             company: reg.friend.company,
             college: reg.friend.college,
             year: reg.friend.year,
+            preacher: reg.friend.preacher,
           }
         : null,
-      amount: reg.amount,
-      status: reg.status,
       ticketCode: reg.ticketCode || '',
     });
   } catch (err) {

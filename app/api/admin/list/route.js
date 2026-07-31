@@ -8,30 +8,38 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function buildQuery(sp) {
   const q = {};
-  const status = sp.get('status');
   const tier = sp.get('tier');
   const occ = sp.get('occupation');
   const arrived = sp.get('arrived');
+  const preacher = sp.get('preacher');
   const search = (sp.get('q') || '').trim();
 
-  if (status && status !== 'all') q.status = status;
   if (tier && tier !== 'all') q.ticketType = tier;
   if (occ && occ !== 'all') q.occupation = occ;
   if (arrived === 'yes') q.checkedInAt = { $ne: null };
   if (arrived === 'no') q.checkedInAt = null;
+  if (preacher && preacher !== 'all') {
+    q.$or = [{ preacher }, { 'friend.preacher': preacher }];
+  }
 
   if (search) {
     const rx = new RegExp(esc(search), 'i');
-    q.$or = [
+    const searchOr = [
       { name: rx },
       { phone: rx },
       { college: rx },
       { company: rx },
       { ticketCode: rx },
-      { razorpayPaymentId: rx },
       { 'friend.name': rx },
       { 'friend.phone': rx },
     ];
+    // preacher filter already used $or, so combine both with $and instead of clobbering
+    if (q.$or) {
+      q.$and = [{ $or: q.$or }, { $or: searchOr }];
+      delete q.$or;
+    } else {
+      q.$or = searchOr;
+    }
   }
   return q;
 }
@@ -65,14 +73,11 @@ export async function GET(req) {
         company: r.company,
         college: r.college,
         year: r.year,
+        preacher: r.preacher,
         ticketType: r.ticketType,
         heads: r.heads,
         friend: r.friend || null,
-        amount: r.amount,
-        status: r.status,
         ticketCode: r.ticketCode,
-        paymentId: r.razorpayPaymentId,
-        method: r.paymentMethod,
         checkedInAt: r.checkedInAt || null,
         createdAt: r.createdAt,
       })),

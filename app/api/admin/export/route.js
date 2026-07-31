@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 const cell = (v) => {
   const s = v === null || v === undefined ? '' : String(v);
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  return /["\n,]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 
 const ist = (d) =>
@@ -23,8 +23,7 @@ export async function GET(req) {
 
     const header = [
       'Ticket code', 'Person', 'Name', 'Mobile', 'Age', 'Currently', 'College / Company', 'Year',
-      'Ticket', 'Admits', 'Amount (Rs)', 'Status', 'Payment ID', 'Method', 'Booked at (IST)',
-      'Paid at (IST)', 'Arrived at (IST)',
+      'Preacher', 'Ticket type', 'Admits', 'Registered at (IST)', 'Arrived at (IST)',
     ];
 
     // One line per attendee, so the total line count is the headcount for the feast.
@@ -33,23 +32,20 @@ export async function GET(req) {
       const shared = [
         r.ticketType === 'duo' ? 'Duo' : 'Single',
         r.heads,
-        (r.amount / 100).toFixed(0),
-        r.status,
-        r.razorpayPaymentId || '',
-        r.paymentMethod || '',
         ist(r.createdAt),
-        ist(r.paidAt),
         ist(r.checkedInAt),
       ];
       lines.push(
         [r.ticketCode || '', '1', r.name, r.phone, r.age, r.occupation,
-         r.occupation === 'student' ? r.college : r.company, r.year || '', ...shared].map(cell).join(',')
+         r.occupation === 'student' ? r.college : r.company, r.year || '', r.preacher || '', ...shared]
+          .map(cell).join(',')
       );
       if (r.friend?.name) {
         lines.push(
           [r.ticketCode || '', '2', r.friend.name, r.friend.phone, r.friend.age ?? '',
            r.friend.occupation, r.friend.occupation === 'student' ? r.friend.college : r.friend.company,
-           r.friend.year || '', ...shared].map(cell).join(',')
+           r.friend.year || '', r.friend.preacher || '', ...shared]
+            .map(cell).join(',')
         );
       }
     }

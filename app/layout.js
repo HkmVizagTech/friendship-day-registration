@@ -3,10 +3,10 @@ import './globals.css';
 export const metadata = {
   title: 'Friendship Unlimited 2026 — Hare Krishna Movement, Visakhapatnam',
   description:
-    'Friendship Day Special at Chaitanya Bhavan, Gambhiram. Live music, games, a talk on real friendship and a full prasadam feast. Rs 99 for one, Rs 149 when you bring a friend.',
+    'Friendship Day Special at Chaitanya Bhavan, Gambhiram. Live music, games, a talk on real friendship and a full prasadam feast. Free entry — registration required. Boys only, age up to 30.',
   openGraph: {
     title: 'Friendship Unlimited 2026',
-    description: 'Music, games, a talk on real friendship and a feast. Bring a friend for Rs 149.',
+    description: 'Music, games, a talk on real friendship and a feast. Free entry, bring a friend along.',
     type: 'website',
   },
 };

@@ -16,31 +16,30 @@ export default function ThankYouClient() {
       setState('missing');
       return;
     }
-    let tries = 0;
     let stop = false;
 
-    async function poll() {
+    // Registration is saved synchronously in /api/register, so this is a
+    // single fetch, not a poll. A couple of quick retries only guard
+    // against a genuine transient network blip, not a pending payment.
+    async function load(attempt = 0) {
       try {
         const res = await fetch(`/api/registration/${rid}`, { cache: 'no-store' });
         if (!res.ok) {
-          setState('missing');
+          if (attempt < 2) return setTimeout(() => load(attempt + 1), 900);
+          if (!stop) setState('missing');
           return;
         }
         const data = await res.json();
         if (stop) return;
         setReg(data);
-        if (data.status === 'paid') {
-          setState('ok');
-          return;
-        }
-        setState('pending');
-        if (tries++ < 10) setTimeout(poll, 3000);
+        setState('ok');
       } catch {
-        if (!stop) setState('pending');
+        if (attempt < 2) return setTimeout(() => load(attempt + 1), 900);
+        if (!stop) setState('missing');
       }
     }
 
-    poll();
+    load();
     return () => {
       stop = true;
     };
@@ -51,7 +50,7 @@ export default function ThankYouClient() {
       <main className="shell">
         <section className="section">
           <p className="eyebrow">One moment</p>
-          <p>Checking your payment…</p>
+          <p>Fetching your pass…</p>
         </section>
       </main>
     );
@@ -68,11 +67,11 @@ export default function ThankYouClient() {
         </header>
         <section className="section">
           <p>
-            We could not find this registration. If money has left your account, call{' '}
+            We could not find this registration. Call{' '}
             <a href={`tel:${EVENT.phone}`} style={{ color: '#FFDE95' }}>
               {EVENT.phone}
             </a>{' '}
-            with your payment ID and we will sort it out the same day.
+            and we will sort it out.
           </p>
           <Link className="back" href="/">
             ← Back to the form
@@ -82,14 +81,13 @@ export default function ThankYouClient() {
     );
   }
 
-  const paid = state === 'ok';
   const duo = reg?.heads === 2;
 
   return (
     <main className="shell">
       <header className="hero">
         <p className="lockup">
-          {paid ? 'Your seat is booked' : 'Almost there'}
+          You&rsquo;re registered
           <span>{EVENT.org}</span>
         </p>
         <h1 className="title">
@@ -105,13 +103,7 @@ export default function ThankYouClient() {
       <section className="card" style={{ marginTop: 24 }}>
         <div className="card-top" />
         <div className="card-body">
-          {!paid && (
-            <p className="pending">
-              Confirming with the bank. Please do not pay again — this page updates on its own.
-            </p>
-          )}
-
-          {paid && reg?.ticketCode && (
+          {reg?.ticketCode && (
             <>
               <label>Show this at the gate</label>
               <p className="tick">{reg.ticketCode}</p>
@@ -149,6 +141,10 @@ export default function ThankYouClient() {
                 </li>
               </>
             )}
+            <li>
+              <span className="k">Preacher</span>
+              <span className="v">{reg?.preacher}</span>
+            </li>
 
             {duo && reg?.friend && (
               <>
@@ -181,27 +177,17 @@ export default function ThankYouClient() {
                     </li>
                   </>
                 )}
+                <li>
+                  <span className="k">Preacher</span>
+                  <span className="v">{reg.friend.preacher}</span>
+                </li>
               </>
             )}
-
-            <li className="head">
-              <span className="k">Payment</span>
-            </li>
-            <li>
-              <span className="k">Amount</span>
-              <span className="v">₹{((reg?.amount || 0) / 100).toFixed(0)}</span>
-            </li>
-            <li>
-              <span className="k">Status</span>
-              <span className="v">{paid ? 'Paid' : 'Processing'}</span>
-            </li>
           </ul>
 
-          {paid && (
-            <p className="fineprint">
-              Take a screenshot. Reach a little before {EVENT.time} so you do not miss the kirtan.
-            </p>
-          )}
+          <p className="fineprint">
+            Entry is free. Take a screenshot of your code. Reach a little before {EVENT.time} so you do not miss the kirtan.
+          </p>
         </div>
       </section>
 

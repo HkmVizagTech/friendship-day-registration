@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Script from 'next/script';
 import Sunset from './sunset';
 import PersonFields from './fields';
-import { EVENT, TIERS } from '@/lib/event';
+import { EVENT } from '@/lib/event';
 
-const blank = { name: '', phone: '', age: '', occupation: '', company: '', college: '', year: '' };
+const blank = { name: '', phone: '', age: '', occupation: '', company: '', college: '', year: '', preacher: '' };
 
 export default function Register() {
   const router = useRouter();
@@ -18,11 +17,9 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
-  const [sdkReady, setSdkReady] = useState(false);
   const [barHidden, setBarHidden] = useState(false);
 
   const isDuo = ticketType === 'duo';
-  const tier = TIERS[ticketType];
 
   // The floating bar is only useful while the form is off screen.
   useEffect(() => {
@@ -72,11 +69,11 @@ export default function Register() {
     cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  async function pay() {
+  async function register() {
     setNotice('');
     setBusy(true);
     try {
-      const res = await fetch('/api/order', {
+      const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...me, ticketType, friend: isDuo ? friend : undefined }),
@@ -88,53 +85,13 @@ export default function Register() {
           setErrors(data.errors);
           setNotice('A few things need fixing below.');
         } else {
-          setNotice(data.message || 'Could not start the payment. Try again.');
+          setNotice(data.message || 'Could not complete registration. Try again.');
         }
         setBusy(false);
         return;
       }
 
-      if (!window.Razorpay) {
-        setNotice('Payment window did not load. Refresh the page and try again.');
-        setBusy(false);
-        return;
-      }
-
-      const rzp = new window.Razorpay({
-        key: data.keyId,
-        order_id: data.orderId,
-        amount: data.amount,
-        currency: data.currency,
-        name: 'Friendship Unlimited 2026',
-        description: isDuo ? 'Entry for two' : 'Entry for one',
-        prefill: { name: data.name, contact: data.phone },
-        theme: { color: '#E8551F' },
-        modal: {
-          ondismiss: () => {
-            setBusy(false);
-            setNotice('Payment cancelled. Your seat is not booked yet.');
-          },
-        },
-        handler: async (r) => {
-          try {
-            await fetch('/api/verify', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(r),
-            });
-          } catch {
-            // The webhook still confirms it; the next page polls until it does.
-          }
-          router.push(`/thank-you?rid=${data.registrationId}`);
-        },
-      });
-
-      rzp.on('payment.failed', (resp) => {
-        setBusy(false);
-        setNotice(resp?.error?.description || 'Payment failed. Try another method.');
-      });
-
-      rzp.open();
+      router.push(`/thank-you?rid=${data.registrationId}`);
     } catch {
       setNotice('Network problem. Check your connection and try again.');
       setBusy(false);
@@ -143,12 +100,6 @@ export default function Register() {
 
   return (
     <main className="shell">
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="afterInteractive"
-        onLoad={() => setSdkReady(true)}
-      />
-
       <header className="hero">
         <p className="lockup">
           {EVENT.host} invites you
@@ -197,23 +148,22 @@ export default function Register() {
       <section className="card" ref={cardRef}>
         <div className="card-top" />
         <div className="card-body">
-          <h2>Book your seat</h2>
-          <p className="sub">The feast is cooked to headcount, so please register before you come.</p>
+          <h2>Reserve your seat</h2>
+          <p className="sub">Entry is free, but the feast is cooked to headcount — everyone must register to attend.</p>
 
           {notice && <p className="formerr">{notice}</p>}
 
           <div className="tiers">
             <button type="button" className="tier single" aria-pressed={!isDuo} onClick={() => chooseTier('single')}>
               <span className="who">Just me</span>
-              <span className="price">₹99</span>
+              <span className="price">Free</span>
               <span className="note">One entry</span>
             </button>
 
             <button type="button" className="tier duo" aria-pressed={isDuo} onClick={() => chooseTier('duo')}>
-              <span className="save">Save ₹49</span>
               <span className="who">Me + a friend</span>
-              <span className="price">₹149</span>
-              <span className="note">Two entries</span>
+              <span className="price">Free</span>
+              <span className="note">Two entries, one form</span>
             </button>
           </div>
 
@@ -241,14 +191,13 @@ export default function Register() {
             </div>
           )}
 
-          <p className="restriction-note">{EVENT.restriction} — please confirm before paying.</p>
+          <p className="restriction-note">{EVENT.restriction} — please confirm before registering.</p>
 
-          <button className="pay" onClick={pay} disabled={busy || !sdkReady}>
-            <span>{busy ? 'Opening payment…' : isDuo ? 'Pay for two' : 'Pay and register'}</span>
-            <span className="amt">₹{tier.amount / 100}</span>
+          <button className="pay" onClick={register} disabled={busy}>
+            <span>{busy ? 'Registering…' : isDuo ? 'Register both of us' : 'Register — it\u2019s free'}</span>
           </button>
 
-          <p className="fineprint">Secure payment by Razorpay. Your pass appears the moment payment clears.</p>
+          <p className="fineprint">No payment needed. Your pass appears the moment you register.</p>
         </div>
       </section>
 
@@ -286,11 +235,11 @@ export default function Register() {
 
       <div className={`bookbar${barHidden ? ' hide' : ''}`}>
         <span className="lead">
-          <b>₹99 · ₹149 for two</b>
+          <b>{EVENT.entry}</b>
           {EVENT.weekday} {EVENT.date.split(' ')[0]} Aug, {EVENT.time}
         </span>
         <button type="button" onClick={jumpToForm}>
-          Book now
+          Register
         </button>
       </div>
     </main>

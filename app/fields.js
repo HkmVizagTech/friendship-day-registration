@@ -1,5 +1,7 @@
 'use client';
 
+import { PREACHERS } from '@/lib/event';
+
 const YEARS = ['1st year', '2nd year', '3rd year', '4th year', '5th year', 'Postgraduate'];
 
 export default function PersonFields({ idPrefix, keyPrefix, values, errors, onSet, onPick }) {
@@ -51,6 +53,24 @@ export default function PersonFields({ idPrefix, keyPrefix, values, errors, onSe
           />
           {e('age') && <p className="err">{e('age')}</p>}
         </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor={id('preacher')}>Your preacher</label>
+        <select
+          id={id('preacher')}
+          value={values.preacher}
+          onChange={onSet('preacher')}
+          className={e('preacher') ? 'bad' : ''}
+        >
+          <option value="">Choose your preacher</option>
+          {PREACHERS.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+        {e('preacher') && <p className="err">{e('preacher')}</p>}
       </div>
 
       <div className="field">
