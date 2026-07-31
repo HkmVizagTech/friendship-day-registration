@@ -11,15 +11,11 @@ const blank = { name: '', phone: '', age: '', occupation: '', company: '', colle
 export default function Register() {
   const router = useRouter();
   const cardRef = useRef(null);
-  const [ticketType, setTicketType] = useState('single');
   const [me, setMe] = useState(blank);
-  const [friend, setFriend] = useState(blank);
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [barHidden, setBarHidden] = useState(false);
-
-  const isDuo = ticketType === 'duo';
 
   // The floating bar is only useful while the form is off screen.
   useEffect(() => {
@@ -43,27 +39,6 @@ export default function Register() {
     setMe((f) => ({ ...f, occupation: v, company: '', college: '', year: '' }));
     clearErr('occupation');
   };
-  const setTheirs = (k) => (ev) => {
-    const v = ev.target.value;
-    setFriend((f) => ({ ...f, [k]: v }));
-    clearErr(`friend.${k}`);
-  };
-  const pickTheirs = (v) => () => {
-    setFriend((f) => ({ ...f, occupation: v, company: '', college: '', year: '' }));
-    clearErr('friend.occupation');
-  };
-
-  function chooseTier(t) {
-    setTicketType(t);
-    setNotice('');
-    setErrors((x) => {
-      const next = {};
-      Object.keys(x).forEach((k) => {
-        if (!k.startsWith('friend.')) next[k] = x[k];
-      });
-      return next;
-    });
-  }
 
   function jumpToForm() {
     cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -76,7 +51,7 @@ export default function Register() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...me, ticketType, friend: isDuo ? friend : undefined }),
+        body: JSON.stringify(me),
       });
       const data = await res.json();
 
@@ -153,46 +128,12 @@ export default function Register() {
 
           {notice && <p className="formerr">{notice}</p>}
 
-          <div className="field">
-            <label>Who&rsquo;s coming</label>
-            <div className="seg">
-              <button type="button" aria-pressed={!isDuo} onClick={() => chooseTier('single')}>
-                Just me
-              </button>
-              <button type="button" aria-pressed={isDuo} onClick={() => chooseTier('duo')}>
-                Me + a friend
-              </button>
-            </div>
-          </div>
-
-          <div className="who-head">
-            <b>{isDuo ? 'You' : 'Your details'}</b>
-            {isDuo && <span>Person 1</span>}
-          </div>
           <PersonFields idPrefix="me" keyPrefix="" values={me} errors={errors} onSet={setMine} onPick={pickMine} />
-
-          {isDuo && (
-            <div className="reveal">
-              <div className="who-head">
-                <b>Your friend</b>
-                <span>Person 2</span>
-              </div>
-              <p className="hint">Both of you come in on one pass, so bring them along on the evening.</p>
-              <PersonFields
-                idPrefix="friend"
-                keyPrefix="friend."
-                values={friend}
-                errors={errors}
-                onSet={setTheirs}
-                onPick={pickTheirs}
-              />
-            </div>
-          )}
 
           <p className="restriction-note">{EVENT.restriction} — please confirm before registering.</p>
 
           <button className="pay" onClick={register} disabled={busy}>
-            <span>{busy ? 'Registering…' : isDuo ? 'Register both of us' : 'Register — it\u2019s free'}</span>
+            <span>{busy ? 'Registering…' : 'Register — it\u2019s free'}</span>
           </button>
 
           <p className="fineprint">No payment needed. Your pass appears the moment you register.</p>

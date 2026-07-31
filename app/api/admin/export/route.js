@@ -22,32 +22,26 @@ export async function GET(req) {
       .lean();
 
     const header = [
-      'Ticket code', 'Person', 'Name', 'Mobile', 'Age', 'Currently', 'College / Company', 'Year',
-      'Preacher', 'Ticket type', 'Admits', 'Registered at (IST)', 'Arrived at (IST)',
+      'Ticket code', 'Name', 'Mobile', 'Age', 'Currently', 'College / Company', 'Year',
+      'Preacher', 'Registered at (IST)', 'Arrived at (IST)',
     ];
 
-    // One line per attendee, so the total line count is the headcount for the feast.
     const lines = [header.join(',')];
     for (const r of rows) {
-      const shared = [
-        r.ticketType === 'duo' ? 'Duo' : 'Single',
-        r.heads,
-        ist(r.createdAt),
-        ist(r.checkedInAt),
-      ];
       lines.push(
-        [r.ticketCode || '', '1', r.name, r.phone, r.age, r.occupation,
-         r.occupation === 'student' ? r.college : r.company, r.year || '', r.preacher || '', ...shared]
-          .map(cell).join(',')
+        [
+          r.ticketCode || '',
+          r.name,
+          r.phone,
+          r.age,
+          r.occupation,
+          r.occupation === 'student' ? r.college : r.company,
+          r.year || '',
+          r.preacher || '',
+          ist(r.createdAt),
+          ist(r.checkedInAt),
+        ].map(cell).join(',')
       );
-      if (r.friend?.name) {
-        lines.push(
-          [r.ticketCode || '', '2', r.friend.name, r.friend.phone, r.friend.age ?? '',
-           r.friend.occupation, r.friend.occupation === 'student' ? r.friend.college : r.friend.company,
-           r.friend.year || '', r.friend.preacher || '', ...shared]
-            .map(cell).join(',')
-        );
-      }
     }
 
     const stamp = new Date().toISOString().slice(0, 10);

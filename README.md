@@ -145,3 +145,18 @@ payment step, no Razorpay account needed, and no webhook to configure.
 age-cap rejection at 31, missing/invalid preacher rejection, duo with two
 different preachers, thank-you page fetch, admin stats/list/export, and gate
 check-in by both ticket code and a duo friend's phone number.
+
+## Single registration only (31 Jul 2026 change)
+
+Removed the "Just me" / "Me + a friend" tier cards entirely. Every registration
+is now one person, one form, one pass. Everyone attending — including friends
+who used to come in on someone else's duo pass — fills in their own form.
+
+**What changed:**
+- `ticketType`, `heads`, and the `friend` sub-document are gone from the schema.
+- The form shows a single set of fields, no tier selection.
+- Admin dashboard, CSV export, and gate check-in no longer show ticket type or
+  "admits N" — it's one row, one person, one pass throughout.
+- Re-tested end to end against a real MongoDB after the change: registration,
+  validation, thank-you fetch, admin stats/list/export, and gate check-in by
+  both code and phone.

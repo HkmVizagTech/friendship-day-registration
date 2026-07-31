@@ -20,7 +20,7 @@ export default function ThankYouClient() {
 
     // Registration is saved synchronously in /api/register, so this is a
     // single fetch, not a poll. A couple of quick retries only guard
-    // against a genuine transient network blip, not a pending payment.
+    // against a genuine transient network blip.
     async function load(attempt = 0) {
       try {
         const res = await fetch(`/api/registration/${rid}`, { cache: 'no-store' });
@@ -81,8 +81,6 @@ export default function ThankYouClient() {
     );
   }
 
-  const duo = reg?.heads === 2;
-
   return (
     <main className="shell">
       <header className="hero">
@@ -107,13 +105,12 @@ export default function ThankYouClient() {
             <>
               <label>Show this at the gate</label>
               <p className="tick">{reg.ticketCode}</p>
-              <span className="admits">Admits {reg.heads}</span>
             </>
           )}
 
           <ul className="rows">
             <li className="head">
-              <span className="k">{duo ? 'Person 1' : 'Attendee'}</span>
+              <span className="k">Attendee</span>
             </li>
             <li>
               <span className="k">Name</span>
@@ -145,44 +142,6 @@ export default function ThankYouClient() {
               <span className="k">Preacher</span>
               <span className="v">{reg?.preacher}</span>
             </li>
-
-            {duo && reg?.friend && (
-              <>
-                <li className="head">
-                  <span className="k">Person 2</span>
-                </li>
-                <li>
-                  <span className="k">Name</span>
-                  <span className="v">{reg.friend.name}</span>
-                </li>
-                <li>
-                  <span className="k">Mobile</span>
-                  <span className="v">{reg.friend.phone}</span>
-                </li>
-                {reg.friend.occupation === 'working' && (
-                  <li>
-                    <span className="k">Company</span>
-                    <span className="v">{reg.friend.company}</span>
-                  </li>
-                )}
-                {reg.friend.occupation === 'student' && (
-                  <>
-                    <li>
-                      <span className="k">College</span>
-                      <span className="v">{reg.friend.college}</span>
-                    </li>
-                    <li>
-                      <span className="k">Year</span>
-                      <span className="v">{reg.friend.year}</span>
-                    </li>
-                  </>
-                )}
-                <li>
-                  <span className="k">Preacher</span>
-                  <span className="v">{reg.friend.preacher}</span>
-                </li>
-              </>
-            )}
           </ul>
 
           <p className="fineprint">

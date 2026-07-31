@@ -31,7 +31,6 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [data, setData] = useState({ rows: [], total: 0, pages: 1, page: 1 });
   const [q, setQ] = useState('');
-  const [tier, setTier] = useState('all');
   const [occupation, setOccupation] = useState('all');
   const [arrived, setArrived] = useState('all');
   const [preacher, setPreacher] = useState('all');
@@ -39,10 +38,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const params = useCallback(() => {
-    const p = new URLSearchParams({ tier, occupation, arrived, preacher, page: String(page), limit: '25' });
+    const p = new URLSearchParams({ occupation, arrived, preacher, page: String(page), limit: '25' });
     if (q.trim()) p.set('q', q.trim());
     return p;
-  }, [tier, occupation, arrived, preacher, page, q]);
+  }, [occupation, arrived, preacher, page, q]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,7 +63,7 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, [load, q]);
 
-  useEffect(() => setPage(1), [q, tier, occupation, arrived, preacher]);
+  useEffect(() => setPage(1), [q, occupation, arrived, preacher]);
 
   async function signOut() {
     await fetch('/api/admin/logout', { method: 'POST' });
@@ -94,35 +93,22 @@ export default function Dashboard() {
 
         <dl className="stat-grid">
           <div className="stat accent">
-            <dt>Coming to the feast</dt>
+            <dt>Registered</dt>
             <dd>
-              {stats?.heads ?? '—'}
+              {stats?.registrations ?? '—'}
               <em>people</em>
             </dd>
-          </div>
-          <div className="stat">
-            <dt>Registrations</dt>
-            <dd>{stats?.bookings ?? '—'}</dd>
           </div>
           <div className="stat">
             <dt>Arrived</dt>
             <dd>
               {stats?.arrived ?? '—'}
-              <em>of {stats?.heads ?? 0}</em>
+              <em>of {stats?.registrations ?? 0}</em>
             </dd>
           </div>
         </dl>
 
         <div className="panels">
-          <div className="panel">
-            <h3>Ticket type</h3>
-            <Bars
-              rows={[
-                { name: 'Single', n: stats?.byTier?.single || 0 },
-                { name: 'Duo', n: stats?.byTier?.duo || 0 },
-              ]}
-            />
-          </div>
           <div className="panel">
             <h3>Studying or working</h3>
             <Bars
@@ -142,7 +128,7 @@ export default function Dashboard() {
           </div>
           <div className="panel">
             <h3>Registrations by day</h3>
-            <Bars rows={(stats?.daily || []).map((d) => ({ name: d.day, n: d.heads }))} />
+            <Bars rows={(stats?.daily || []).map((d) => ({ name: d.day, n: d.n }))} />
           </div>
         </div>
 
@@ -153,11 +139,6 @@ export default function Dashboard() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name, mobile, college, ticket code"
           />
-          <select value={tier} onChange={(e) => setTier(e.target.value)}>
-            <option value="all">Any ticket</option>
-            <option value="single">Single</option>
-            <option value="duo">Duo</option>
-          </select>
           <select value={occupation} onChange={(e) => setOccupation(e.target.value)}>
             <option value="all">Anyone</option>
             <option value="student">Studying</option>
@@ -192,7 +173,6 @@ export default function Dashboard() {
                   <th>Age</th>
                   <th>College / Company</th>
                   <th>Preacher</th>
-                  <th>Ticket</th>
                   <th>Code</th>
                   <th>Registered</th>
                 </tr>
@@ -202,36 +182,21 @@ export default function Dashboard() {
                   <tr key={r.id}>
                     <td>
                       <span className="nm">{r.name}</span>
-                      {r.friend?.name && <span className="sm">+ {r.friend.name}</span>}
                       {r.checkedInAt && (
                         <span className="sm">
                           <span className="pill here">Arrived {ist(r.checkedInAt)}</span>
                         </span>
                       )}
                     </td>
-                    <td>
-                      {r.phone}
-                      {r.friend?.phone && <span className="sm">{r.friend.phone}</span>}
-                    </td>
-                    <td>
-                      {r.age}
-                      {r.friend?.age && <span className="sm">{r.friend.age}</span>}
-                    </td>
+                    <td>{r.phone}</td>
+                    <td>{r.age}</td>
                     <td>
                       {r.occupation === 'student' ? r.college : r.company}
                       <span className="sm">
                         {r.occupation === 'student' ? r.year : 'Working'}
                       </span>
                     </td>
-                    <td>
-                      {r.preacher}
-                      {r.friend?.preacher && <span className="sm">{r.friend.preacher}</span>}
-                    </td>
-                    <td>
-                      <span className={`pill ${r.ticketType}`}>
-                        {r.ticketType === 'duo' ? 'Duo · 2' : 'Single · 1'}
-                      </span>
-                    </td>
+                    <td>{r.preacher}</td>
                     <td className="code">{r.ticketCode || '—'}</td>
                     <td>
                       <span className="sm" style={{ marginTop: 0 }}>{ist(r.createdAt)}</span>

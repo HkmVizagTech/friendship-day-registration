@@ -17,28 +17,14 @@ export async function GET() {
             {
               $group: {
                 _id: null,
-                bookings: { $sum: 1 },
-                heads: { $sum: '$heads' },
-                arrived: { $sum: { $cond: [{ $ifNull: ['$checkedInAt', false] }, '$heads', 0] } },
+                registrations: { $sum: 1 },
+                arrived: { $sum: { $cond: [{ $ifNull: ['$checkedInAt', false] }, 1, 0] } },
               },
             },
           ],
-          byTier: [{ $group: { _id: '$ticketType', n: { $sum: 1 } } }],
           byOccupation: [{ $group: { _id: '$occupation', n: { $sum: 1 } } }],
           byPreacher: [
-            {
-              $project: {
-                preachers: {
-                  $filter: {
-                    input: ['$preacher', '$friend.preacher'],
-                    as: 'p',
-                    cond: { $ne: ['$$p', null] },
-                  },
-                },
-              },
-            },
-            { $unwind: '$preachers' },
-            { $group: { _id: '$preachers', n: { $sum: 1 } } },
+            { $group: { _id: '$preacher', n: { $sum: 1 } } },
             { $sort: { n: -1 } },
           ],
           colleges: [
@@ -51,7 +37,7 @@ export async function GET() {
             {
               $group: {
                 _id: { $dateToString: { format: '%d %b', date: '$createdAt', timezone: 'Asia/Kolkata' } },
-                heads: { $sum: '$heads' },
+                n: { $sum: 1 },
                 at: { $min: '$createdAt' },
               },
             },
@@ -62,18 +48,15 @@ export async function GET() {
       },
     ]);
 
-    const t = agg.totals[0] || { bookings: 0, heads: 0, arrived: 0 };
-    const asMap = (rows) => Object.fromEntries(rows.map((r) => [r._id || 'unknown', r.n]));
+    const t = agg.totals[0] || { registrations: 0, arrived: 0 };
 
     return NextResponse.json({
-      bookings: t.bookings,
-      heads: t.heads,
+      registrations: t.registrations,
       arrived: t.arrived,
-      byTier: asMap(agg.byTier),
-      byOccupation: asMap(agg.byOccupation),
+      byOccupation: Object.fromEntries(agg.byOccupation.map((r) => [r._id || 'unknown', r.n])),
       preachers: agg.byPreacher.map((p) => ({ name: p._id || 'Not given', n: p.n })),
       colleges: agg.colleges.map((c) => ({ name: c._id || 'Not given', n: c.n })),
-      daily: agg.daily.map((d) => ({ day: d._id, heads: d.heads })),
+      daily: agg.daily.map((d) => ({ day: d._id, n: d.n })),
     });
   } catch (err) {
     console.error('stats error', err);

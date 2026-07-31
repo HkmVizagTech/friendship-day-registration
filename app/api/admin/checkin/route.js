@@ -8,9 +8,7 @@ function summarize(reg) {
   return {
     id: String(reg._id),
     code: reg.ticketCode,
-    heads: reg.heads,
     name: reg.name,
-    friendName: reg.friend?.name || '',
     checkedInAt: reg.checkedInAt || null,
   };
 }
@@ -20,9 +18,7 @@ async function findByCode(clean) {
 }
 
 async function findByPhone(digits) {
-  return Registration.find({
-    $or: [{ phone: digits }, { 'friend.phone': digits }],
-  }).sort({ createdAt: -1 });
+  return Registration.find({ phone: digits }).sort({ createdAt: -1 });
 }
 
 async function settle(reg, undo) {

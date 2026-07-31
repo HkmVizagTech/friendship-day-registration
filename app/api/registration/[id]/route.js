@@ -20,19 +20,6 @@ export async function GET(_req, { params }) {
       college: reg.college,
       year: reg.year,
       preacher: reg.preacher,
-      ticketType: reg.ticketType,
-      heads: reg.heads,
-      friend: reg.friend
-        ? {
-            name: reg.friend.name,
-            phone: mask(reg.friend.phone),
-            occupation: reg.friend.occupation,
-            company: reg.friend.company,
-            college: reg.friend.college,
-            year: reg.friend.year,
-            preacher: reg.friend.preacher,
-          }
-        : null,
       ticketCode: reg.ticketCode || '',
     });
   } catch (err) {

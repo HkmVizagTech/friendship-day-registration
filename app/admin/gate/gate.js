@@ -24,18 +24,18 @@ export default function Gate() {
         kind: 'warn',
         title: 'Already in',
         line: `${d.pass.name} came in at ${ist(d.pass.checkedInAt)}.`,
-        meta: `${d.pass.code} · admits ${d.pass.heads}`,
+        meta: d.pass.code,
         id: d.pass.id,
       });
     } else {
       setResult({
         kind: 'ok',
-        title: `Let ${d.pass.heads} in`,
-        line: d.pass.friendName ? `${d.pass.name} + ${d.pass.friendName}` : d.pass.name,
+        title: 'Let them in',
+        line: d.pass.name,
         meta: `${d.pass.code} · checked in ${ist(d.pass.checkedInAt)}`,
         id: d.pass.id,
       });
-      setRecent((r) => [{ code: d.pass.code, name: d.pass.name, heads: d.pass.heads, at: d.pass.checkedInAt }, ...r].slice(0, 12));
+      setRecent((r) => [{ code: d.pass.code, name: d.pass.name, at: d.pass.checkedInAt }, ...r].slice(0, 12));
     }
   }
 
@@ -124,7 +124,7 @@ export default function Gate() {
                 style={{ width: '100%', marginBottom: 8, textAlign: 'left' }}
                 onClick={() => pick(c)}
               >
-                <strong>{c.name}</strong>{c.friendName ? ` + ${c.friendName}` : ''} — {c.code} · admits {c.heads}
+                <strong>{c.name}</strong> — {c.code}
                 {c.checkedInAt ? ` · already in ${ist(c.checkedInAt)}` : ''}
               </button>
             ))}
@@ -150,9 +150,7 @@ export default function Gate() {
             <ul>
               {recent.map((r, i) => (
                 <li key={`${r.code}-${i}`}>
-                  <span>
-                    {r.name} <span style={{ opacity: 0.55 }}>· {r.heads}</span>
-                  </span>
+                  <span>{r.name}</span>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: 12 }}>{ist(r.at)}</span>
                 </li>
               ))}
