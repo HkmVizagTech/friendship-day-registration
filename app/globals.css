@@ -120,11 +120,18 @@ body {
   border-radius: 12px;
   cursor: pointer;
 }
-.confirm-check input {
-  width: 19px;
-  height: 19px;
-  margin-top: 1px;
+.confirm-check input[type='checkbox'] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  padding: 0;
+  border: none;
+  border-bottom: none;
+  background: none;
   accent-color: #CF2A5C;
+  cursor: pointer;
   flex-shrink: 0;
 }
 .confirm-check span {
