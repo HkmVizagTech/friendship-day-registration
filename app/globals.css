@@ -93,24 +93,45 @@ body {
 
 .restriction {
   display: block;
-  width: fit-content;
-  margin: 10px auto 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: var(--ember-ink);
-  background: #FFF0E5;
-  border: 1px solid #F5D2B8;
-  border-radius: 999px;
-  padding: 4px 12px;
+  width: calc(100% - 32px);
+  max-width: 340px;
+  margin: 12px auto 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: center;
+  color: #fff;
+  background: #CF2A5C;
+  border: 2px solid #A81E48;
+  border-radius: 12px;
+  padding: 10px 14px;
+  box-shadow: 0 6px 16px rgba(207, 42, 92, 0.28);
 }
 
-.restriction-note {
-  margin: 4px 0 12px;
-  font-size: 12.5px;
+.confirm-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 0 14px;
+  padding: 12px 13px;
+  background: #FFF0F4;
+  border: 1.5px solid #F3BBCB;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.confirm-check input {
+  width: 19px;
+  height: 19px;
+  margin-top: 1px;
+  accent-color: #CF2A5C;
+  flex-shrink: 0;
+}
+.confirm-check span {
+  font-size: 13.5px;
   font-weight: 700;
-  color: var(--ember-ink);
-  text-align: center;
+  color: #96143F;
+  line-height: 1.4;
 }
 
 .sunset { display: block; width: 100%; height: auto; margin-top: 18px; }

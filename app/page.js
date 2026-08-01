@@ -15,6 +15,7 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [barHidden, setBarHidden] = useState(false);
 
   // The floating bar is only useful while the form is off screen.
@@ -130,9 +131,16 @@ export default function Register() {
 
           <PersonFields idPrefix="me" keyPrefix="" values={me} errors={errors} onSet={setMine} onPick={pickMine} />
 
-          <p className="restriction-note">{EVENT.restriction} — please confirm before registering.</p>
+          <label className="confirm-check">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+            />
+            <span>This event is for BOYS ONLY, age up to 30. I confirm this registration is for a boy in that age group.</span>
+          </label>
 
-          <button className="pay" onClick={register} disabled={busy}>
+          <button className="pay" onClick={register} disabled={busy || !confirmed}>
             <span>{busy ? 'Registering…' : 'Register — it\u2019s free'}</span>
           </button>
 
